@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 from io import BytesIO
 
 from bs4 import BeautifulSoup
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import requests
 
 TIMEOUT = 3  # seconds
@@ -40,7 +40,10 @@ class Icon:
             return None
 
         with BytesIO(res.content) as bio:
-            img = Image.open(bio)
+            try:
+                img = Image.open(bio)
+            except UnidentifiedImageError:
+                return None
         width, height = img.size
         # Ignore non-square Icons
         if width != height:
