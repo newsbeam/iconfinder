@@ -42,7 +42,7 @@ class Icon:
         with BytesIO(res.content) as bio:
             try:
                 img = Image.open(bio)
-            except UnidentifiedImageError:
+            except (UnidentifiedImageError, ValueError):
                 return None
         width, height = img.size
         # Ignore non-square Icons
