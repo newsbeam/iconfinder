@@ -64,11 +64,13 @@ def icons(url: str) -> List[Icon]:
             return []
 
         soup = BeautifulSoup(response.text, features="lxml")
-        links = soup.find_all("link", attrs={"rel": "shortcut icon", "href": True}) \
-                + soup.find_all("link", attrs={"rel": "icon", "href": True}) \
-                + soup.find_all("link", attrs={"rel": "apple-touch-icon-precomposed", "href": True}) \
-                + soup.find_all("link", attrs={"rel": "apple-touch-icon", "href": True}) \
-                + [{"href": "/favicon.ico"}]
+        links = (
+            soup.find_all("link", attrs={"rel": "shortcut icon", "href": True})
+            + soup.find_all("link", attrs={"rel": "icon", "href": True})
+            + soup.find_all("link", attrs={"rel": "apple-touch-icon-precomposed", "href": True})
+            + soup.find_all("link", attrs={"rel": "apple-touch-icon", "href": True})
+            + [{"href": "/favicon.ico"}]
+        )
         hrefs = set(urljoin(url, link["href"]) for link in links)
 
         icons_ = [Icon.from_url(urljoin(url, href), sesh) for href in hrefs]  # type: List[Optional[Icon]]
