@@ -3,7 +3,7 @@ from distutils.core import setup
 setup(
     name="nm_iconfinder",
     packages=["nm_iconfinder"],
-    version="0.1.2",
+    version="0.2",
     license="ISC",
     description="Find icons of a website given a URL",
     author="newsmail.today",
