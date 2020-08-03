@@ -32,9 +32,11 @@ class Icon:
         return "Icon {0} {1}x{1}".format(format, self.size)
 
     @classmethod
-    def from_url(cls, url: str) -> Optional["Icon"]:
+    def from_url(cls, url: str, session: Optional[requests.Session]) -> Optional["Icon"]:
+        get = session.get if session else requests.get
+
         try:
-            res = requests.get(url, timeout=TIMEOUT)
+            res = get(url, timeout=TIMEOUT)
             res.raise_for_status()
         except requests.exceptions.RequestException:
             return None
@@ -54,19 +56,20 @@ class Icon:
 
 
 def icons(url: str) -> List[Icon]:
-    try:
-        response = requests.get(url, timeout=TIMEOUT)
-        response.raise_for_status()
-    except requests.exceptions.RequestException:
-        return []
+    with requests.Session() as sesh:
+        try:
+            response = sesh.get(url, timeout=TIMEOUT)
+            response.raise_for_status()
+        except requests.exceptions.RequestException:
+            return []
 
-    soup = BeautifulSoup(response.text, features="lxml")
-    links = soup.find_all("link", attrs={"rel": "shortcut icon", "href": True}) \
-            + soup.find_all("link", attrs={"rel": "icon", "href": True}) \
-            + soup.find_all("link", attrs={"rel": "apple-touch-icon-precomposed", "href": True}) \
-            + soup.find_all("link", attrs={"rel": "apple-touch-icon", "href": True}) \
-            + [{"href": "/favicon.ico"}]
-    hrefs = set(urljoin(url, link["href"]) for link in links)
+        soup = BeautifulSoup(response.text, features="lxml")
+        links = soup.find_all("link", attrs={"rel": "shortcut icon", "href": True}) \
+                + soup.find_all("link", attrs={"rel": "icon", "href": True}) \
+                + soup.find_all("link", attrs={"rel": "apple-touch-icon-precomposed", "href": True}) \
+                + soup.find_all("link", attrs={"rel": "apple-touch-icon", "href": True}) \
+                + [{"href": "/favicon.ico"}]
+        hrefs = set(urljoin(url, link["href"]) for link in links)
 
-    icons_ = [Icon.from_url(urljoin(url, href)) for href in hrefs]  # type: List[Optional[Icon]]
-    return sorted(filter(lambda i: i is not None, icons_), key=lambda i: i.size, reverse=True)
+        icons_ = [Icon.from_url(urljoin(url, href), sesh) for href in hrefs]  # type: List[Optional[Icon]]
+        return sorted(filter(lambda i: i is not None, icons_), key=lambda i: i.size, reverse=True)
